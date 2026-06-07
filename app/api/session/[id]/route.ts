@@ -1,1 +1,0 @@
-// → GET (single session), PATCH (update duration)
