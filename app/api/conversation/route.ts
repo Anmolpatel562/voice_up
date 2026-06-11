@@ -10,6 +10,7 @@ export async function POST(request: Request) {
                         User just said: "${transcript}"
                         Respond naturally in 2-3 sentences. Keep it conversational.`
         const response = await geminiCall(prompt);
+        if (!response) return Response.json({response: ""}, {status:200});
         return Response.json({response: response}, {status:200});
     }
     catch (error) {
