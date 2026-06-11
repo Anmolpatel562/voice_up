@@ -1,7 +1,8 @@
 "use client"
 import { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, PhoneOff } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 declare global {
     interface Window {
@@ -16,6 +17,7 @@ export default function Session() {
     const [isMicRecording, setIsMicRecording] = useState(false)
     const [sessionId, setSessionId] = useState<string | null>(null)
     const [sessionDuration, setSessionDuration] = useState(0)
+    const [isAiThinking, setIsAiThinking] = useState(false)
     const [conversation, setConversation] = useState<{ role: string, text: string }[]>([])
     const recognitionRef = useRef<any>(null)
     const scrollRef = useRef<HTMLDivElement>(null)
@@ -40,13 +42,18 @@ export default function Session() {
         return `${mins}:${secs}`
     }
 
-    const startRecording = () => {
+    const startRecording = async () => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
         const recognition = new SpeechRecognition()
         recognition.lang = "en-US"
-        recognition.onresult = (event: any) => {
+        // recognition.continuous = true  // keep this false actually
+        // recognition.interimResults = true
+        recognition.onresult = async (event: any) => {
             const transcript = event.results[0][0].transcript
-            handleExchange(transcript);
+            await handleExchange(transcript);
+        }
+        recognition.onend = () => {
+            setIsMicRecording(false)  // ← automatically reset when speech stops
         }
         recognitionRef.current = recognition
         recognition.start()
@@ -110,12 +117,15 @@ export default function Session() {
             if (!transcript) return;
             setConversation(prev => [...prev, { role: 'user', text: transcript }])
             saveMessage('user', transcript);
+            setIsAiThinking(true);
             const geminiResponse = await callGemini(transcript, conversation);
+            setIsAiThinking(false);
             if (geminiResponse) {
                 setConversation(prev => [...prev, { role: 'ai', text: geminiResponse }])
                 saveMessage('ai', geminiResponse);
             }
         } catch (error) {
+            setIsAiThinking(false)
             console.log("Error : ", error);
         }
     }
@@ -140,9 +150,15 @@ export default function Session() {
                 body: JSON.stringify({ transcript, history })
             })
             const data = await geminiResponse.json();
+            if (!geminiResponse.ok) {
+                toast.error("AI is temporarily unavailable. Please try again.")
+                return null
+            }
             return data.response;
         } catch (error) {
+            toast.error("Something went wrong. Please try again.")
             console.log("Error while calling gemini api : ", error);
+            return null
         }
     }
 
@@ -158,11 +174,10 @@ export default function Session() {
                             {formatDuration(sessionDuration)}
                         </span>
                     )}
-                    <div className={`flex items-center gap-2 text-xs px-3 py-1 rounded-full border ${
-                        isMicRecording
+                    <div className={`flex items-center gap-2 text-xs px-3 py-1 rounded-full border ${isMicRecording
                             ? "border-red-500/30 text-red-400 bg-red-500/10"
                             : "border-[#222222] text-[#888888]"
-                    }`}>
+                        }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${isMicRecording ? "bg-red-400 animate-pulse" : "bg-[#444444]"}`} />
                         {isMicRecording ? "Recording" : "Idle"}
                     </div>
@@ -187,15 +202,23 @@ export default function Session() {
                         key={idx}
                         className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                        <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                            msg.role === 'user'
+                        <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
                                 ? 'bg-white text-black rounded-br-sm'
                                 : 'bg-[#111111] text-white border border-[#222222] rounded-bl-sm'
-                        }`}>
+                            }`}>
                             {msg.text}
                         </div>
                     </div>
                 ))}
+                {isAiThinking && (
+                    <div className="flex justify-start">
+                        <div className="bg-[#111111] border border-[#222222] rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#888888] animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#888888] animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#888888] animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Bottom Controls */}
@@ -215,11 +238,10 @@ export default function Session() {
                             {/* Mic Button */}
                             <button
                                 onClick={isMicRecording ? stopRecording : startRecording}
-                                className={`relative flex h-16 w-16 items-center justify-center rounded-full transition-all duration-200 ${
-                                    isMicRecording
+                                className={`relative flex h-16 w-16 items-center justify-center rounded-full transition-all duration-200 ${isMicRecording
                                         ? "bg-red-500 hover:bg-red-600"
                                         : "bg-white hover:bg-[#f0f0f0]"
-                                }`}
+                                    }`}
                             >
                                 {isMicRecording && (
                                     <span className="absolute inset-0 rounded-full animate-ping bg-red-500 opacity-20" />

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers"
 import { cn } from "@/lib/utils";
+import { Toaster } from "sonner"
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -35,6 +36,7 @@ export default function RootLayout({
         <Providers>
           {children}
         </Providers>
+        <Toaster theme="dark" position="bottom-center" />
       </body>
     </html>
   );
