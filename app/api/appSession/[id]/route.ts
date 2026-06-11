@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 export async function PATCH(request: Request,  { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
-        console.log("SessionId ==>> ", id);
         const { duration } = await request.json();
         if (duration === undefined) return Response.json({message: "Duration not found!"}, {status: 400})
         if (!id) return Response.json({message: "App Session Id not found!"}, {status:400});
