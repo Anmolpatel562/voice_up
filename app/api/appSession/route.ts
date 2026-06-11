@@ -18,3 +18,16 @@ export async function POST(request: Request) {
         return Response.json({ message: "Something went wrong while creating the session."}, { status:500 });
     }
 }
+
+
+export async function GET(request: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) return Response.json({message: "UnAuthorized"}, {status: 401});
+        const allSession = await prisma.appSession.findMany({where:{userId:session.user.id}, orderBy: { createdAt: "desc" }})
+        return Response.json({  response: allSession}, {status: 200});
+    } catch (error) {
+        console.log("Error : ", error);
+        return Response.json({ message: "Something went wrong while Fetching the session."}, { status:500 });
+    }
+}
