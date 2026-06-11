@@ -16,8 +16,7 @@ export async function POST (request: Request) {
                           "overallFeedback": ""
                         }`
         const data = await geminiCall(prompt, "application/json");
-        console.log("data ==> ", data);
-        const responseObj = JSON.parse(data?data:"");
+        const responseObj = JSON.parse(data);
         const newFeedbackObj = await prisma.feedback.create({
             data: {
               sessionId: sessionId,

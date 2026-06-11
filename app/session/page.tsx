@@ -1,10 +1,6 @@
 "use client"
 import { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, PhoneOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRouter } from "next/navigation";
 
 declare global {
@@ -22,19 +18,21 @@ export default function Session() {
     const [sessionDuration, setSessionDuration] = useState(0)
     const [conversation, setConversation] = useState<{ role: string, text: string }[]>([])
     const recognitionRef = useRef<any>(null)
+    const scrollRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         if (!isSessionStarted) return
-
         const interval = setInterval(() => {
-            if (isSessionStarted) {
-                setSessionDuration(prev => prev + 1)
-            }
+            setSessionDuration(prev => prev + 1)
         }, 1000);
-        return () => {
-            clearInterval(interval);
-        }
+        return () => clearInterval(interval);
     }, [isSessionStarted]);
+
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+        }
+    }, [conversation]);
 
     const formatDuration = (seconds: number) => {
         const mins = Math.floor(seconds / 60).toString().padStart(2, '0')
@@ -48,7 +46,6 @@ export default function Session() {
         recognition.lang = "en-US"
         recognition.onresult = (event: any) => {
             const transcript = event.results[0][0].transcript
-            console.log("transcript ==>> ", transcript)
             handleExchange(transcript);
         }
         recognitionRef.current = recognition
@@ -78,36 +75,35 @@ export default function Session() {
     }
 
     const handleEndSession = async () => {
-//      Show feedback to user
         try {
             setIsSessionStarted(false);
             await updateAppSession();
             const feedback = await feedbackApi(conversation);
             router.push(`/feedback/${sessionId}`)
-            console.log("feedback => ", feedback);
         } catch (error) {
             console.log("Error ending session:", error);
         }
     }
 
     const updateAppSession = async () => {
-        console.log("Passed SessionId ==>> ", sessionId);
-        const id = sessionId;
-        await fetch(`/api/appSession/${id}`, {
-            method:"PATCH",
-            headers: { "Content-Type":"application/json"},
-            body: JSON.stringify({duration: sessionDuration}),
+        await fetch(`/api/appSession/${sessionId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ duration: sessionDuration }),
         })
     }
 
-    const feedbackApi = async (transcript:{ role: string, text: string }[]) => {
+    const feedbackApi = async (transcript: { role: string, text: string }[]) => {
+        console.log("transcript ==>> ", transcript);
+        if (transcript.length === 0) return;
+        console.log("hitting gemini apiiii ==>> ", transcript);
         const response = await fetch(`/api/feedback`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({sessionId: sessionId, transcript: transcript})
+            body: JSON.stringify({ sessionId: sessionId, transcript: transcript })
         })
-        return await response.json();;
-    } 
+        return await response.json();
+    }
 
     const handleExchange = async (transcript: string) => {
         try {
@@ -116,34 +112,32 @@ export default function Session() {
             saveMessage('user', transcript);
             const geminiResponse = await callGemini(transcript, conversation);
             if (geminiResponse) {
-                console.log("No it worked");
                 setConversation(prev => [...prev, { role: 'ai', text: geminiResponse }])
                 saveMessage('ai', geminiResponse);
             }
-            console.log("Yes passed");
         } catch (error) {
             console.log("Error : ", error);
         }
     }
 
-    const saveMessage = async (role: String, transcript: String) => {
+    const saveMessage = async (role: string, text: string) => {
         try {
             await fetch("/api/message", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sessionId, role: role, text: transcript })
+                body: JSON.stringify({ sessionId, role, text })
             })
         } catch (error) {
             console.log("Error while saving message to db : ", error);
         }
     }
 
-    const callGemini = async (transcript: String, history: { role: string, text: string }[]) => {
+    const callGemini = async (transcript: string, history: { role: string, text: string }[]) => {
         try {
             const geminiResponse = await fetch("/api/conversation", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ transcript: transcript, history: history })
+                body: JSON.stringify({ transcript, history })
             })
             const data = await geminiResponse.json();
             return data.response;
@@ -153,100 +147,108 @@ export default function Session() {
     }
 
     return (
-        <div className="container mx-auto max-w-4xl p-6">
-            <Card className="p-6 space-y-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-xl font-bold">
-                        Practice Session
-                    </h1>
+        <main className="min-h-screen bg-[#0A0A0A] flex flex-col">
 
-                    <Badge
-                        variant={
-                            isMicRecording
-                                ? "destructive"
-                                : "secondary"
-                        }
-                    >
-                        {isMicRecording
-                            ? "Recording"
-                            : "Idle"}
-                    </Badge>
-                </div>
-
-                <div className="text-sm text-muted-foreground">
-                    <div>Duration: {formatDuration(sessionDuration)}</div>
-                </div>
-
-                <ScrollArea className="h-[350px] rounded-md border p-4">
-                    <div className="space-y-3">
-                        {conversation.map((msg, idx) => (
-                            <div
-                                key={idx}
-                                className="rounded-lg bg-muted p-3"
-                            >
-                                {msg.text}
-                            </div>
-                        ))}
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#1a1a1a]">
+                <span className="text-white font-bold text-lg">VoiceUp</span>
+                <div className="flex items-center gap-4">
+                    {isSessionStarted && (
+                        <span className="text-[#888888] text-sm font-mono">
+                            {formatDuration(sessionDuration)}
+                        </span>
+                    )}
+                    <div className={`flex items-center gap-2 text-xs px-3 py-1 rounded-full border ${
+                        isMicRecording
+                            ? "border-red-500/30 text-red-400 bg-red-500/10"
+                            : "border-[#222222] text-[#888888]"
+                    }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${isMicRecording ? "bg-red-400 animate-pulse" : "bg-[#444444]"}`} />
+                        {isMicRecording ? "Recording" : "Idle"}
                     </div>
-                </ScrollArea>
-                {!isSessionStarted ? (
-                    <Button onClick={handleStartSession}>Start Session</Button>
-                ) : (
-                    <div className="flex flex-col items-center gap-4">
-                        <button
-                            onClick={isMicRecording ? stopRecording : startRecording}
-                            className={`
-                                relative flex h-24 w-24 items-center justify-center rounded-full
-                                ${isMicRecording
-                                    ? "bg-red-500"
-                                    : "bg-primary"
-                                }
-              text-white
-            `}
-                        >
-                            {isMicRecording && (
-                                <>
-                                    <span className="absolute inset-0 rounded-full animate-ping bg-red-500 opacity-30" />
-                                    <span className="absolute inset-0 rounded-full animate-pulse bg-red-500 opacity-40" />
-                                </>
-                            )}
+                </div>
+            </div>
 
-                            {isMicRecording ? (
-                                <MicOff className="h-8 w-8" />
-                            ) : (
-                                <Mic className="h-8 w-8" />
-                            )}
-                        </button>
-
-                        <Button
-                            size="lg"
-                            variant={
-                                isMicRecording
-                                    ? "destructive"
-                                    : "default"
-                            }
-                            onClick={() =>
-                                setIsMicRecording(
-                                    !isMicRecording
-                                )
-                            }
-                        >
-                            {isMicRecording
-                                ? "Stop Recording"
-                                : "Start Recording"}
-                        </Button>
-
-                        <Button
-                            variant="outline"
-                            size="lg"
-                            onClick={handleEndSession}
-                        >
-                            <PhoneOff className="mr-2 h-4 w-4" />
-                            End Session
-                        </Button>
+            {/* Conversation Area */}
+            <div
+                ref={scrollRef}
+                className="flex-1 overflow-y-auto px-6 py-6 space-y-4 max-w-2xl w-full mx-auto"
+            >
+                {conversation.length === 0 && (
+                    <div className="flex items-center justify-center h-full min-h-[200px]">
+                        <p className="text-[#444444] text-sm">
+                            {isSessionStarted ? "Press the mic to start speaking..." : "Start a session to begin practicing"}
+                        </p>
                     </div>
                 )}
-            </Card>
-        </div>
+
+                {conversation.map((msg, idx) => (
+                    <div
+                        key={idx}
+                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                        <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+                            msg.role === 'user'
+                                ? 'bg-white text-black rounded-br-sm'
+                                : 'bg-[#111111] text-white border border-[#222222] rounded-bl-sm'
+                        }`}>
+                            {msg.text}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Bottom Controls */}
+            <div className="border-t border-[#1a1a1a] px-6 py-6">
+                <div className="max-w-2xl mx-auto flex flex-col items-center gap-4">
+
+                    {!isSessionStarted ? (
+                        <button
+                            onClick={handleStartSession}
+                            className="bg-white text-black font-medium px-8 py-3 rounded-lg hover:bg-[#f0f0f0] transition-colors duration-150"
+                        >
+                            Start Session
+                        </button>
+                    ) : (
+                        <div className="flex items-center gap-6">
+
+                            {/* Mic Button */}
+                            <button
+                                onClick={isMicRecording ? stopRecording : startRecording}
+                                className={`relative flex h-16 w-16 items-center justify-center rounded-full transition-all duration-200 ${
+                                    isMicRecording
+                                        ? "bg-red-500 hover:bg-red-600"
+                                        : "bg-white hover:bg-[#f0f0f0]"
+                                }`}
+                            >
+                                {isMicRecording && (
+                                    <span className="absolute inset-0 rounded-full animate-ping bg-red-500 opacity-20" />
+                                )}
+                                {isMicRecording
+                                    ? <MicOff className="h-6 w-6 text-white" />
+                                    : <Mic className="h-6 w-6 text-black" />
+                                }
+                            </button>
+
+                            {/* End Session */}
+                            <button
+                                onClick={handleEndSession}
+                                className="flex items-center gap-2 text-[#888888] text-sm border border-[#222222] px-4 py-2 rounded-lg hover:border-red-500/50 hover:text-red-400 transition-colors duration-150"
+                            >
+                                <PhoneOff className="h-4 w-4" />
+                                End Session
+                            </button>
+                        </div>
+                    )}
+
+                    {isSessionStarted && (
+                        <p className="text-[#444444] text-xs">
+                            {isMicRecording ? "Listening... click to stop" : "Click mic to speak"}
+                        </p>
+                    )}
+                </div>
+            </div>
+
+        </main>
     );
 }

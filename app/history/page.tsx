@@ -20,13 +20,8 @@ export default function HistoryPage() {
   const fetchSessions = async () => {
     try {
       const response = await fetch("/api/appSession");
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch sessions");
-      }
-
+      if (!response.ok) throw new Error("Failed to fetch sessions");
       const data = await response.json();
-
       setSessions(data.response || []);
     } catch (error) {
       console.error("Error fetching sessions:", error);
@@ -35,53 +30,89 @@ export default function HistoryPage() {
     }
   };
 
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60).toString().padStart(2, '0')
+    const secs = (seconds % 60).toString().padStart(2, '0')
+    return `${mins}:${secs}`
+  }
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p>Loading sessions...</p>
-      </div>
+      <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <p className="text-[#888888] text-sm">Loading...</p>
+      </main>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8">
-        Session History
-      </h1>
+    <main className="min-h-screen bg-[#0A0A0A]">
 
-      {sessions.length === 0 ? (
-        <div className="border rounded-lg p-6 text-center">
-          <p>No sessions found.</p>
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#1a1a1a]">
+        <span className="text-white font-bold text-lg">VoiceUp</span>
+        <Link
+          href="/home"
+          className="text-[#888888] text-sm hover:text-white transition-colors"
+        >
+          ← Back to home
+        </Link>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-6 py-10">
+
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-white">Session History</h1>
+          <p className="text-[#888888] text-sm mt-1">
+            {sessions.length} {sessions.length === 1 ? "session" : "sessions"} total
+          </p>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {sessions.map((session) => (
-            <div
-              key={session.id}
-              className="border rounded-lg p-4 flex justify-between items-center"
+
+        {sessions.length === 0 ? (
+          <div className="text-center py-20 space-y-4">
+            <p className="text-[#888888]">No sessions yet.</p>
+            <Link
+              href="/session"
+              className="inline-block bg-white text-black font-medium px-6 py-2 rounded-lg text-sm hover:bg-[#f0f0f0] transition-colors"
             >
-              <div>
-                <p className="font-semibold">
-                  {new Date(
-                    session.createdAt
-                  ).toLocaleDateString()}
-                </p>
-
-                <p className="text-gray-600">
-                  Duration: {session.duration} sec
-                </p>
-              </div>
-
-              <Link
-                href={`/feedback/${session.id}`}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              Start your first session
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {sessions.map((session, index) => (
+              <div
+                key={session.id}
+                className="bg-[#111111] border border-[#1a1a1a] rounded-xl px-5 py-4 flex items-center justify-between"
               >
-                View Feedback
-              </Link>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+                <div className="space-y-1">
+                  <p className="text-white text-sm font-medium">
+                    Session {sessions.length - index}
+                  </p>
+                  <div className="flex items-center gap-3 text-xs text-[#888888]">
+                    <span>
+                      {new Date(session.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric"
+                      })}
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-[#444444]" />
+                    <span>{formatDuration(session.duration)}</span>
+                  </div>
+                </div>
+
+                <Link
+                  href={`/feedback/${session.id}`}
+                  className="text-sm text-[#888888] border border-[#222222] px-4 py-1.5 rounded-lg hover:text-white hover:border-[#444444] transition-colors"
+                >
+                  View Feedback
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+
+      </div>
+    </main>
   );
 }
