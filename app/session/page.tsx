@@ -22,8 +22,10 @@ export default function Session() {
     const [conversation, setConversation] = useState<{ role: string, text: string }[]>([])
     const [isStartingSession, setIsStartingSession] = useState(false)
     const [isEndingSession, setIsEndingSession] = useState(false)
+    const [liveTranscript, setLiveTranscript] = useState("");
     const recognitionRef = useRef<any>(null)
     const scrollRef = useRef<HTMLDivElement>(null)
+    const transcriptRef = useRef("")
 
     useEffect(() => {
         if (!isSessionStarted) return
@@ -35,9 +37,10 @@ export default function Session() {
 
     useEffect(() => {
         if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+            scrollRef.current.scrollTop =
+                scrollRef.current.scrollHeight
         }
-    }, [conversation]);
+    }, [conversation, liveTranscript]);
 
     const formatDuration = (seconds: number) => {
         const mins = Math.floor(seconds / 60).toString().padStart(2, '0')
@@ -49,14 +52,47 @@ export default function Session() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
         const recognition = new SpeechRecognition()
         recognition.lang = "en-US"
-        // recognition.continuous = true  // keep this false actually
-        // recognition.interimResults = true
-        recognition.onresult = async (event: any) => {
-            const transcript = event.results[0][0].transcript
-            await handleExchange(transcript);
+        recognition.continuous = true
+        recognition.interimResults = true
+
+        recognition.onresult = (event: any) => {
+            let finalTranscript = ""
+            let interimTranscript = ""
+            for (
+                let i = event.resultIndex;
+                i < event.results.length;
+                i++
+            ) {
+                const transcript = event.results[i][0].transcript
+
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript
+                } else {
+                    interimTranscript += transcript
+                }
+            }
+            const currentTranscript =
+                transcriptRef.current +
+                finalTranscript +
+                interimTranscript
+
+            setLiveTranscript(currentTranscript)
+            if (finalTranscript) {
+                transcriptRef.current += finalTranscript
+            }
         }
-        recognition.onend = () => {
-            setIsMicRecording(false)  // ← automatically reset when speech stops
+
+        recognition.onend = async () => {
+            const finalText = (transcriptRef.current + liveTranscript).trim()
+            setIsMicRecording(false)
+            if (!finalText) {
+                setLiveTranscript("")
+                transcriptRef.current = ""
+                return
+            }
+            await handleExchange(finalText)
+            setLiveTranscript("")
+            transcriptRef.current = ""
         }
         recognitionRef.current = recognition
         recognition.start()
@@ -65,7 +101,6 @@ export default function Session() {
 
     const stopRecording = () => {
         recognitionRef.current?.stop()
-        setIsMicRecording(false)
     }
 
     const handleStartSession = async () => {
@@ -197,7 +232,7 @@ export default function Session() {
                 {conversation.length === 0 && (
                     <div className="flex items-center justify-center h-full min-h-[200px]">
                         <p className="text-[#444444] text-sm">
-                            {isSessionStarted ? "Press the mic to start speaking..." : "Start a session to begin practicing"}
+                            {isSessionStarted ?  !isMicRecording ? "Press the mic to start speaking..." : "" : "Start a session to begin practicing"}
                         </p>
                     </div>
                 )}
@@ -207,7 +242,7 @@ export default function Session() {
                         key={idx}
                         className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                        <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
+                        <div className={`max-w-[75%] px-4 py-2 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
                             ? 'bg-white text-black rounded-br-sm'
                             : 'bg-[#111111] text-white border border-[#222222] rounded-bl-sm'
                             }`}>
@@ -215,6 +250,28 @@ export default function Session() {
                         </div>
                     </div>
                 ))}
+                {isMicRecording && (
+                    <div className="flex justify-end">
+                        <div className="max-w-[75%] px-4 py-2 rounded-2xl rounded-br-sm bg-white text-black">
+                            <span>{liveTranscript}</span>
+
+                            <span className="inline-flex items-center gap-1 ml-2">
+                                <span
+                                    className="w-1 h-1 rounded-full bg-black animate-bounce"
+                                    style={{ animationDelay: "0ms" }}
+                                />
+                                <span
+                                    className="w-1 h-1 rounded-full bg-black animate-bounce"
+                                    style={{ animationDelay: "150ms" }}
+                                />
+                                <span
+                                    className="w-1 h-1 rounded-full bg-black animate-bounce"
+                                    style={{ animationDelay: "300ms" }}
+                                />
+                            </span>
+                        </div>
+                    </div>
+                )}
                 {isAiThinking && (
                     <div className="flex justify-start">
                         <div className="bg-[#111111] border border-[#222222] rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-2">
