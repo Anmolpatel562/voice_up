@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, PhoneOff } from "lucide-react";
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { Loader2 } from "lucide-react";
 
 declare global {
     interface Window {
@@ -19,6 +20,8 @@ export default function Session() {
     const [sessionDuration, setSessionDuration] = useState(0)
     const [isAiThinking, setIsAiThinking] = useState(false)
     const [conversation, setConversation] = useState<{ role: string, text: string }[]>([])
+    const [isStartingSession, setIsStartingSession] = useState(false)
+    const [isEndingSession, setIsEndingSession] = useState(false)
     const recognitionRef = useRef<any>(null)
     const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -67,6 +70,7 @@ export default function Session() {
 
     const handleStartSession = async () => {
         try {
+            setIsStartingSession(true);
             const response = await fetch("/api/appSession", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -74,6 +78,7 @@ export default function Session() {
             })
             const data = await response.json()
             if (!data.sessionId) return
+            setIsStartingSession(false);
             setSessionId(data.sessionId)
             setIsSessionStarted(true)
         } catch (error) {
@@ -84,8 +89,10 @@ export default function Session() {
     const handleEndSession = async () => {
         try {
             setIsSessionStarted(false);
+            setIsEndingSession(true);
             await updateAppSession();
             const feedback = await feedbackApi(conversation);
+            setIsEndingSession(false);
             router.push(`/feedback/${sessionId}`)
         } catch (error) {
             console.log("Error ending session:", error);
@@ -101,9 +108,7 @@ export default function Session() {
     }
 
     const feedbackApi = async (transcript: { role: string, text: string }[]) => {
-        console.log("transcript ==>> ", transcript);
         if (transcript.length === 0) return;
-        console.log("hitting gemini apiiii ==>> ", transcript);
         const response = await fetch(`/api/feedback`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -175,8 +180,8 @@ export default function Session() {
                         </span>
                     )}
                     <div className={`flex items-center gap-2 text-xs px-3 py-1 rounded-full border ${isMicRecording
-                            ? "border-red-500/30 text-red-400 bg-red-500/10"
-                            : "border-[#222222] text-[#888888]"
+                        ? "border-red-500/30 text-red-400 bg-red-500/10"
+                        : "border-[#222222] text-[#888888]"
                         }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${isMicRecording ? "bg-red-400 animate-pulse" : "bg-[#444444]"}`} />
                         {isMicRecording ? "Recording" : "Idle"}
@@ -203,8 +208,8 @@ export default function Session() {
                         className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                         <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
-                                ? 'bg-white text-black rounded-br-sm'
-                                : 'bg-[#111111] text-white border border-[#222222] rounded-bl-sm'
+                            ? 'bg-white text-black rounded-br-sm'
+                            : 'bg-[#111111] text-white border border-[#222222] rounded-bl-sm'
                             }`}>
                             {msg.text}
                         </div>
@@ -230,7 +235,11 @@ export default function Session() {
                             onClick={handleStartSession}
                             className="bg-white text-black font-medium px-8 py-3 rounded-lg hover:bg-[#f0f0f0] transition-colors duration-150"
                         >
-                            Start Session
+                            {isStartingSession ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                "Start Session"
+                            )}
                         </button>
                     ) : (
                         <div className="flex items-center gap-6">
@@ -239,8 +248,8 @@ export default function Session() {
                             <button
                                 onClick={isMicRecording ? stopRecording : startRecording}
                                 className={`relative flex h-16 w-16 items-center justify-center rounded-full transition-all duration-200 ${isMicRecording
-                                        ? "bg-red-500 hover:bg-red-600"
-                                        : "bg-white hover:bg-[#f0f0f0]"
+                                    ? "bg-red-500 hover:bg-red-600"
+                                    : "bg-white hover:bg-[#f0f0f0]"
                                     }`}
                             >
                                 {isMicRecording && (
@@ -258,7 +267,14 @@ export default function Session() {
                                 className="flex items-center gap-2 text-[#888888] text-sm border border-[#222222] px-4 py-2 rounded-lg hover:border-red-500/50 hover:text-red-400 transition-colors duration-150"
                             >
                                 <PhoneOff className="h-4 w-4" />
-                                End Session
+
+                                {isEndingSession ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    "End Session"
+                                )}
+
+
                             </button>
                         </div>
                     )}
