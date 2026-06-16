@@ -23,48 +23,48 @@ export default function HomePage() {
   const initials = user?.name?.split(" ").map((n) => n[0]).join("").toUpperCase() ?? "U"
 
   return (
-    <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center px-4">
+    <main className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-sm flex flex-col items-center gap-8">
 
         {/* Logo */}
-        <h1 className="text-2xl font-bold tracking-tight text-white">VoiceUp</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">VoiceUp</h1>
 
         {/* User Info */}
         <div className="flex flex-col items-center gap-3">
-          <Avatar className="h-16 w-16 border border-[#222222]">
+          <Avatar className="h-16 w-16 border border-border">
             <AvatarImage src={user?.image ?? ""} alt={user?.name ?? ""} />
-            <AvatarFallback className="bg-[#111111] text-white text-lg">
+            <AvatarFallback className="bg-card text-foreground text-lg">
               {initials}
             </AvatarFallback>
           </Avatar>
           <div className="text-center">
-            <p className="text-white font-medium">{user?.name}</p>
-            <p className="text-[#888888] text-sm">{user?.email}</p>
+            <p className="text-foreground font-medium">{user?.name}</p>
+            <p className="text-muted-foreground text-sm">{user?.email}</p>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="w-full h-px bg-[#1a1a1a]" />
+        <div className="w-full h-px bg-border" />
 
         {/* Actions */}
         <div className="w-full flex flex-col gap-3">
           <Link
             href="/session"
-            className="w-full bg-white text-black font-medium py-3 px-6 rounded-lg text-center hover:bg-[#f0f0f0] transition-colors duration-150"
+            className="w-full bg-primary text-primary-foreground font-medium py-3 px-6 rounded-lg text-center hover:bg-primary/90 transition-colors duration-150"
           >
             Start Practicing
           </Link>
 
           <Link
             href="/history"
-            className="w-full bg-[#111111] text-white font-medium py-3 px-6 rounded-lg text-center border border-[#222222] hover:bg-[#1a1a1a] transition-colors duration-150"
+            className="w-full bg-card text-card-foreground font-medium py-3 px-6 rounded-lg text-center border border-border hover:bg-accent transition-colors duration-150"
           >
             View History
           </Link>
 
           <button
             onClick={() => signOut()}
-            className="w-full text-[#888888] text-sm py-2 hover:text-white transition-colors duration-150"
+            className="w-full text-muted-foreground text-sm py-2 hover:text-foreground transition-colors duration-150"
           >
             Sign out
           </button>

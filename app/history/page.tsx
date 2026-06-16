@@ -38,21 +38,21 @@ export default function HistoryPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <p className="text-[#888888] text-sm">Loading...</p>
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground text-sm">Loading...</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#0A0A0A]">
+    <main className="min-h-screen bg-background">
 
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[#1a1a1a]">
-        <span className="text-white font-bold text-lg">VoiceUp</span>
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+        <span className="text-foreground font-bold text-lg">VoiceUp</span>
         <Link
           href="/home"
-          className="text-[#888888] text-sm hover:text-white transition-colors"
+          className="text-muted-foreground text-sm hover:text-foreground transition-colors"
         >
           ← Back to home
         </Link>
@@ -61,18 +61,18 @@ export default function HistoryPage() {
       <div className="max-w-2xl mx-auto px-6 py-10">
 
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-white">Session History</h1>
-          <p className="text-[#888888] text-sm mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Session History</h1>
+          <p className="text-muted-foreground text-sm mt-1">
             {sessions.length} {sessions.length === 1 ? "session" : "sessions"} total
           </p>
         </div>
 
         {sessions.length === 0 ? (
           <div className="text-center py-20 space-y-4">
-            <p className="text-[#888888]">No sessions yet.</p>
+            <p className="text-muted-foreground">No sessions yet.</p>
             <Link
               href="/session"
-              className="inline-block bg-white text-black font-medium px-6 py-2 rounded-lg text-sm hover:bg-[#f0f0f0] transition-colors"
+              className="inline-block bg-primary text-primary-foreground font-medium px-6 py-2 rounded-lg text-sm hover:bg-primary/90 transition-colors"
             >
               Start your first session
             </Link>
@@ -82,13 +82,13 @@ export default function HistoryPage() {
             {sessions.map((session, index) => (
               <div
                 key={session.id}
-                className="bg-[#111111] border border-[#1a1a1a] rounded-xl px-5 py-4 flex items-center justify-between"
+                className="bg-card border border-border rounded-xl px-5 py-4 flex items-center justify-between"
               >
                 <div className="space-y-1">
-                  <p className="text-white text-sm font-medium">
+                  <p className="text-foreground text-sm font-medium">
                     Session {sessions.length - index}
                   </p>
-                  <div className="flex items-center gap-3 text-xs text-[#888888]">
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <span>
                       {new Date(session.createdAt).toLocaleDateString("en-IN", {
                         day: "numeric",
@@ -96,14 +96,14 @@ export default function HistoryPage() {
                         year: "numeric"
                       })}
                     </span>
-                    <span className="w-1 h-1 rounded-full bg-[#444444]" />
+                    <span className="w-1 h-1 rounded-full bg-ring" />
                     <span>{formatDuration(session.duration)}</span>
                   </div>
                 </div>
 
                 <Link
                   href={`/feedback/${session.id}`}
-                  className="text-sm text-[#888888] border border-[#222222] px-4 py-1.5 rounded-lg hover:text-white hover:border-[#444444] transition-colors"
+                  className="text-sm text-muted-foreground border border-border px-4 py-1.5 rounded-lg hover:text-foreground hover:border-ring transition-colors"
                 >
                   View Feedback
                 </Link>

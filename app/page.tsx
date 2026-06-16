@@ -17,12 +17,12 @@ export default function Home() {
   if (status === "loading") return null
 
   return (
-    <main className="min-h-screen bg-[#0A0A0A] flex items-center justify-center px-4">
+    <main className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-sm flex flex-col items-center gap-10">
 
         {/* Logo + Wave */}
         <div className="flex flex-col items-center gap-4">
-          <h1 className="text-5xl font-bold tracking-tight text-white">
+          <h1 className="text-5xl font-bold tracking-tight text-foreground">
             VoiceUp
           </h1>
 
@@ -31,7 +31,7 @@ export default function Home() {
             {[0.4, 0.7, 1, 0.7, 0.5, 0.8, 1, 0.6, 0.4, 0.9].map((scale, i) => (
               <div
                 key={i}
-                className="w-[3px] rounded-full bg-white"
+                className="w-[3px] rounded-full bg-foreground"
                 style={{
                   height: `${scale * 24}px`,
                   opacity: 0.3 + scale * 0.5,
@@ -44,7 +44,7 @@ export default function Home() {
 
         {/* Tagline */}
         <div className="text-center space-y-2">
-          <p className="text-[#888888] text-sm leading-relaxed">
+          <p className="text-muted-foreground text-sm leading-relaxed">
             Practice English conversations with AI.<br />
             Get honest feedback. Speak with confidence.
           </p>
@@ -53,7 +53,7 @@ export default function Home() {
         {/* Google Sign In Button */}
         <button
           onClick={() => signIn("google")}
-          className="w-full flex items-center justify-center gap-3 bg-white text-black font-medium py-3 px-6 rounded-lg hover:bg-[#f0f0f0] transition-colors duration-150"
+          className="w-full flex items-center justify-center gap-3 bg-primary text-primary-foreground font-medium py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors duration-150"
         >
           <svg width="18" height="18" viewBox="0 0 18 18">
             <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/>
@@ -65,7 +65,7 @@ export default function Home() {
         </button>
 
         {/* Footer */}
-        <p className="text-[#444444] text-xs text-center">
+        <p className="text-muted-foreground/70 text-xs text-center">
           Your conversations are private and secure.
         </p>
 
