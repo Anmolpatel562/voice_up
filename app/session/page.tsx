@@ -444,21 +444,24 @@ export default function Session() {
       {isVoiceModalOpen && (
         <div
           className="
-      fixed inset-0 z-50
-      bg-background/80 backdrop-blur-sm
-      flex items-center justify-center
-      p-4
-    "
+            fixed inset-0 z-50
+            bg-background/80 backdrop-blur-sm
+            flex items-center justify-center
+            p-4
+            overflow-y-auto
+          "
         >
           <div
-            className="
-        w-full max-w-xl
-        rounded-2xl
-        border border-border
-        bg-card
-        p-8
-        shadow-2xl
-      "
+              className="
+                w-full max-w-xl
+                max-h-[90vh]
+                overflow-y-auto
+                rounded-2xl
+                border border-border
+                bg-card
+                p-8
+                shadow-2xl
+              "
           >
             {/* Header */}
             <div className="flex items-start justify-between border-b border-border pb-6">
