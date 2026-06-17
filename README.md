@@ -21,6 +21,28 @@ Your sessions are saved so you can track improvement over time.
 
 ## Tech Stack
 
+## Screenshots
+
+### Login Page
+![Login](screenshots/Login.png)
+
+### LoggedIn User Page
+![Login](screenshots/LoggedIn.png)
+
+### Session
+![Session](screenshots/Session.png)
+
+### Recording
+![Recording](screenshots/Recording.png)
+
+### Feedback
+![Feedback](screenshots/feedback.png)
+
+### Settings
+![Feedback](screenshots/Settings.png)
+
+
+
 | Layer | Technology |
 |---|---|
 | Frontend | Next.js 16, TypeScript, TailwindCSS, Shadcn UI |
@@ -38,6 +60,7 @@ Your sessions are saved so you can track improvement over time.
 - **Google OAuth** — one-click sign in, no passwords
 - **Real-time voice capture** — browser-native Web Speech API, no extra cost
 - **AI conversation** — Gemini responds naturally to keep the conversation going
+- **Real-time voice transcription** - 
 - **Instant feedback** — grammar analysis, filler word detection, vocabulary suggestions
 - **Session history** — every session saved with date, duration, and feedback
 - **Dark UI** — clean, modern interface built for focus
