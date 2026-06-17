@@ -271,7 +271,7 @@ export default function Session() {
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
         <span className="text-foreground font-bold text-lg">VoiceUp</span>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4"> 
           <button
             onClick={() => setIsVoiceModalOpen(true)}
             className="
