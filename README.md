@@ -35,8 +35,8 @@ Your sessions are saved so you can track improvement over time.
 ### Recording
 ![Recording](screenshots/Recording.png)
 
-### Recording
-![Recording](screenshots/FinalFeedback.png)
+### Feedback
+![Feedback](screenshots/FinalFeedback.png)
 
 ### Settings
 ![Settings](screenshots/Settings.png)
